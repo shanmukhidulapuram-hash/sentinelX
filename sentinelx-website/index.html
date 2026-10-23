@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SentinelX</title>
+  <meta name="description" content="SentinelX — organizational memory for production systems. Powered by Hindsight + Microsoft Azure." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            dark: {
+              950: '#0a0e17',
+              900: '#111827',
+              800: '#1a2234',
+              700: '#1f2a3f',
+              600: '#2a3649',
+              500: '#3a4a63',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .gradient-text {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-gradient {
+      background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59,130,246,0.18), transparent);
+    }
+    .sim-bar { transition: width 1.2s ease; }
+    .error-bar { transition: width 0.9s ease; }
+    html { scroll-behavior: smooth; }
+    .pulse-dot { animation: pulse 2s infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .agent-step { transition: all 0.3s ease; }
+    .agent-step.active { border-color: #3b82f6; background: rgba(59,130,246,0.12); color: #93c5fd; }
+    .agent-step.done { border-color: #10b981; background: rgba(16,185,129,0.1); color: #6ee7b7; }
+    .toggle-track { transition: background 0.2s; }
+    .toggle-knob { transition: transform 0.2s; }
+  </style>
+</head>
+<body class="bg-dark-950 text-slate-100 antialiased">
+  <nav class="fixed top-0 left-0 right-0 z-50 bg-dark-950/85 backdrop-blur-xl border-b border-dark-600">
+    <div class="max-w-6xl mx-auto px-6 py-3.5 flex items-center justify-between">
+      <div class="flex items-center gap-2.5 font-bold text-lg">
+        <img src="logo.png" alt="SentinelX" class="w-9 h-9 rounded-lg object-contain" />
+        <span>SentinelX</span>
+      </div>
+      <div class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
+        <a href="#problem" class="hover:text-white transition">Problem</a>
+        <a href="#demo" class="hover:text-white transition">Live Demo</a>
+        <a href="#architecture" class="hover:text-white transition">Architecture</a>
+        <a href="#impact" class="hover:text-white transition">Impact</a>
+        <a href="#demo" class="ml-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">Try Demo</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero-gradient pt-32 pb-20 px-6">
+    <div class="max-w-4xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-400 text-sm font-semibold mb-6">
+        Organizational Memory for Production Systems
+      </div>
+      <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
+        Don't troubleshoot from scratch.<br class="hidden md:block" />
+        <span class="gradient-text">Remember.</span>
+      </h1>
+      <p class="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-6 leading-relaxed">
+        2:13 AM. Payment APIs return 502s. The on-call engineer has never seen this failure.
+        The fix already exists in a post-mortem from six months ago — but it takes 40 minutes to find.
+      </p>
+      <p class="text-base text-slate-500 max-w-xl mx-auto mb-10">
+        <strong class="text-slate-300">SentinelX</strong> finds it in seconds. Powered by <strong class="text-slate-300">Hindsight</strong> agent memory + Microsoft Azure.
+      </p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="#demo" class="px-7 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition shadow-lg shadow-blue-500/25">
+          Launch Incident Journey →
+        </a>
+        <a href="#architecture" class="px-7 py-3.5 bg-dark-800 hover:bg-dark-700 border border-dark-600 text-white font-semibold rounded-lg transition">
+          View Architecture
+        </a>
+      </div>
+      <div class="flex flex-wrap justify-center gap-12 mt-16">
+        <div class="text-center">
+          <div class="text-3xl font-bold gradient-text">83%</div>
+          <div class="text-sm text-slate-500 mt-1">Demo MTTR reduction</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold gradient-text">94%</div>
+          <div class="text-sm text-slate-500 mt-1">Evidence grounding</div>
+        </div>
+        <div class="text-center">
+          <div class="text-3xl font-bold gradient-text">∞</div>
+          <div class="text-sm text-slate-500 mt-1">Institutional knowledge</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="problem" class="py-20 px-6 bg-dark-900">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-14">
+        <h2 class="text-3xl md:text-4xl font-bold mb-3">The Problem</h2>
+        <p class="text-slate-400 text-lg max-w-2xl mx-auto">The knowledge to fix today's incident already exists in your organization. Finding it under pressure is the bottleneck.</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-7 hover:border-dark-500 transition">
+          <div class="w-12 h-12 rounded-xl bg-red-500/15 flex items-center justify-center text-2xl mb-4">🔍</div>
+          <h3 class="text-xl font-semibold mb-2">Knowledge Scattered</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Post-mortems, tickets, runbooks, logs and Slack threads live in different systems. Engineers waste critical minutes searching.</p>
+        </div>
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-7 hover:border-dark-500 transition">
+          <div class="w-12 h-12 rounded-xl bg-amber-500/15 flex items-center justify-center text-2xl mb-4">⏱️</div>
+          <h3 class="text-xl font-semibold mb-2">Longer MTTR</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Repeated troubleshooting of the same class of failures. Dependency on senior engineers who "just know" the history.</p>
+        </div>
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-7 hover:border-dark-500 transition">
+          <div class="w-12 h-12 rounded-xl bg-purple-500/15 flex items-center justify-center text-2xl mb-4">🧠</div>
+          <h3 class="text-xl font-semibold mb-2">Lost Institutional Memory</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">When experienced SREs leave or are offline, the organization loses years of hard-won incident knowledge.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="py-20 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-14">
+        <h2 class="text-3xl md:text-4xl font-bold mb-3">Powered by Hindsight Memory</h2>
+        <p class="text-slate-400 text-lg max-w-xl mx-auto">Not just RAG. A true agent memory system that retains, recalls, and reflects — just like human memory.</p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-7">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/15 flex items-center justify-center text-2xl mb-4">📥</div>
+          <h3 class="text-xl font-semibold mb-2">Retain</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Automatically extracts World Facts, Experience Facts and Observations from every incident report, post-mortem and runbook.</p>
+        </div>
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-7">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/15 flex items-center justify-center text-2xl mb-4">🔎</div>
+          <h3 class="text-xl font-semibold mb-2">Recall (TEMPR)</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Four parallel strategies: Semantic + Keyword + Entity Graph + Temporal. Fused with RRF and token-budget optimization.</p>
+        </div>
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-7">
+          <div class="w-12 h-12 rounded-xl bg-purple-500/15 flex items-center justify-center text-2xl mb-4">💭</div>
+          <h3 class="text-xl font-semibold mb-2">Reflect</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">Consolidates knowledge into observations, reasons with mission & directives, and produces evidence-backed recommendations.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="demo" class="py-20 px-6 bg-dark-900">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl md:text-4xl font-bold mb-3">Interactive Incident Journey</h2>
+        <p class="text-slate-400 text-lg max-w-2xl mx-auto">Not a chatbot. A closed-loop system: alert → memory → diagnosis → human approval → remediation → learn.</p>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6 bg-dark-800 border border-dark-600 rounded-xl px-5 py-4">
+        <div class="flex items-center gap-4">
+          <span class="text-sm text-slate-400 font-medium">Memory</span>
+          <button id="memory-toggle" type="button" class="relative inline-flex h-7 w-12 items-center rounded-full toggle-track bg-emerald-600 focus:outline-none" aria-pressed="true">
+            <span id="toggle-knob" class="inline-block h-5 w-5 transform rounded-full bg-white toggle-knob translate-x-6"></span>
+          </button>
+          <span id="memory-label" class="text-sm font-semibold text-emerald-400">ON — Organizational memory active</span>
+        </div>
+        <div class="flex items-center gap-3 text-sm">
+          <span class="text-slate-500">Learning curve:</span>
+          <div class="flex gap-1.5">
+            <span class="px-2.5 py-1 rounded-md bg-dark-700 border border-dark-600 text-slate-400">#1 Cold</span>
+            <span class="px-2.5 py-1 rounded-md bg-dark-700 border border-dark-600 text-slate-400">#5 Warm</span>
+            <span class="px-2.5 py-1 rounded-md bg-blue-500/20 border border-blue-500/40 text-blue-400 font-medium">#20 Expert</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-dark-800 border border-dark-600 rounded-2xl overflow-hidden shadow-2xl">
+        <div class="flex flex-wrap items-center gap-3 px-5 py-3.5 bg-dark-700 border-b border-dark-600">
+          <div class="flex gap-1.5">
+            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+            <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+            <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+          </div>
+          <span class="text-sm text-slate-400">SentinelX · Operations Center</span>
+          <span class="ml-auto flex items-center gap-2 text-xs">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span>
+            <span class="text-emerald-400">Live</span>
+          </span>
+        </div>
+
+        <div class="grid lg:grid-cols-5 min-h-[520px]">
+          <div class="lg:col-span-3 flex flex-col border-r border-dark-600">
+            <div class="p-4 border-b border-dark-600 flex flex-wrap gap-2" id="scenario-btns">
+              <button data-scenario="payment" class="scenario-btn text-xs px-3 py-1.5 rounded-md bg-blue-600 text-white font-medium">PaymentService 502s</button>
+              <button data-scenario="database" class="scenario-btn text-xs px-3 py-1.5 rounded-md bg-dark-700 border border-dark-600 text-slate-400 hover:border-blue-500 hover:text-white">DB Latency · Orders</button>
+              <button data-scenario="deploy" class="scenario-btn text-xs px-3 py-1.5 rounded-md bg-dark-700 border border-dark-600 text-slate-400 hover:border-blue-500 hover:text-white">Canary health fail</button>
+            </div>
+
+            <div class="px-4 py-3 border-b border-dark-600 flex flex-wrap gap-2 text-xs" id="agent-pipeline">
+              <span class="agent-step px-2.5 py-1 rounded border border-dark-600 text-slate-500" data-step="triage">1. Triage</span>
+              <span class="agent-step px-2.5 py-1 rounded border border-dark-600 text-slate-500" data-step="recall">2. Recall</span>
+              <span class="agent-step px-2.5 py-1 rounded border border-dark-600 text-slate-500" data-step="rca">3. Root Cause</span>
+              <span class="agent-step px-2.5 py-1 rounded border border-dark-600 text-slate-500" data-step="remediate">4. Remediate</span>
+              <span class="agent-step px-2.5 py-1 rounded border border-dark-600 text-slate-500" data-step="verify">5. Verify</span>
+              <span class="agent-step px-2.5 py-1 rounded border border-dark-600 text-slate-500" data-step="retain">6. Retain</span>
+            </div>
+
+            <div id="journey-content" class="flex-1 p-5 overflow-y-auto max-h-[420px] space-y-4"></div>
+          </div>
+
+          <div class="lg:col-span-2 p-5 bg-dark-950 overflow-y-auto max-h-[520px] space-y-5">
+            <div>
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Blast Radius</h4>
+              <div id="blast-panel" class="bg-dark-800 border border-dark-600 rounded-lg p-3 text-sm space-y-2">
+                <p class="text-slate-500 text-xs">Select a scenario to investigate.</p>
+              </div>
+            </div>
+            <div>
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Memories recalled for this reply</h4>
+              <div id="evidence-list">
+                <p class="text-slate-500 text-sm">Evidence appears when memory is ON and an investigation runs.</p>
+              </div>
+            </div>
+            <div>
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3">Memory Bank</h4>
+              <div class="space-y-2 text-sm">
+                <div class="bg-dark-800 border border-dark-600 rounded-lg px-3 py-2.5 flex justify-between">
+                  <span class="text-slate-400">Incidents retained</span>
+                  <strong id="stat-incidents">1,247</strong>
+                </div>
+                <div class="bg-dark-800 border border-dark-600 rounded-lg px-3 py-2.5 flex justify-between">
+                  <span class="text-slate-400">Post-mortems</span>
+                  <strong>892</strong>
+                </div>
+                <div class="bg-dark-800 border border-dark-600 rounded-lg px-3 py-2.5 flex justify-between">
+                  <span class="text-slate-400">Runbooks</span>
+                  <strong>156</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="text-center text-xs text-slate-500 mt-4">Demo uses simulated telemetry and memory. Connect a real Hindsight server + Azure OpenAI for production.</p>
+    </div>
+  </section>
+
+  <section class="py-16 px-6">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-10">
+        <h2 class="text-3xl font-bold mb-2">Before vs After</h2>
+        <p class="text-slate-400">Same class of incident — traditional search vs organizational memory.</p>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-6">
+          <div class="text-sm font-semibold text-slate-500 mb-4 uppercase tracking-wider">Traditional response</div>
+          <div class="space-y-2 text-sm text-slate-400 font-mono">
+            <div>Alert</div>
+            <div class="text-slate-600">↓</div>
+            <div>Search Slack / tickets</div>
+            <div class="text-slate-600">↓</div>
+            <div>Ask senior engineer</div>
+            <div class="text-slate-600">↓</div>
+            <div>Find post-mortem</div>
+            <div class="text-slate-600">↓</div>
+            <div>Try fix → verify</div>
+          </div>
+          <div class="mt-5 text-2xl font-bold text-amber-400">~47 min avg</div>
+        </div>
+        <div class="bg-dark-800 border border-blue-500/40 rounded-xl p-6">
+          <div class="text-sm font-semibold text-blue-400 mb-4 uppercase tracking-wider">SentinelX + Hindsight</div>
+          <div class="space-y-2 text-sm text-slate-300 font-mono">
+            <div>Alert</div>
+            <div class="text-slate-600">↓</div>
+            <div>Recall similar incidents</div>
+            <div class="text-slate-600">↓</div>
+            <div>Root cause + evidence</div>
+            <div class="text-slate-600">↓</div>
+            <div>Human-approved fix</div>
+            <div class="text-slate-600">↓</div>
+            <div>Verify → Retain</div>
+          </div>
+          <div class="mt-5 text-2xl font-bold text-emerald-400">~8 min avg</div>
+          <div class="text-sm text-emerald-500/80 mt-1">83% faster (demo benchmark)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="architecture" class="py-20 px-6 bg-dark-900">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold mb-3">Architecture</h2>
+        <p class="text-slate-400 text-lg max-w-xl mx-auto">Closed-loop agentic system: triage → recall → reason → approve → remediate → verify → retain.</p>
+      </div>
+      <div class="flex flex-wrap items-center justify-center gap-2 md:gap-3 mb-16 text-sm font-semibold">
+        <div class="bg-dark-800 border border-dark-600 rounded-lg px-4 py-3 text-center min-w-[100px]">Azure Monitor<br/>Alert</div>
+        <span class="text-slate-500">→</span>
+        <div class="bg-dark-800 border border-dark-600 rounded-lg px-4 py-3 text-center min-w-[100px]">Triage<br/>Agent</div>
+        <span class="text-slate-500">→</span>
+        <div class="bg-blue-500/15 border border-blue-500/40 text-blue-400 rounded-lg px-4 py-3 text-center min-w-[100px]">Hindsight<br/>Recall</div>
+        <span class="text-slate-500">→</span>
+        <div class="bg-blue-500/15 border border-blue-500/40 text-blue-400 rounded-lg px-4 py-3 text-center min-w-[100px]">Azure OpenAI<br/>Reason</div>
+        <span class="text-slate-500">→</span>
+        <div class="bg-dark-800 border border-dark-600 rounded-lg px-4 py-3 text-center min-w-[100px]">Safety /<br/>Approval</div>
+        <span class="text-slate-500">→</span>
+        <div class="bg-dark-800 border border-dark-600 rounded-lg px-4 py-3 text-center min-w-[100px]">Remediate +<br/>Verify</div>
+        <span class="text-slate-500">→</span>
+        <div class="bg-blue-500/15 border border-blue-500/40 text-blue-400 rounded-lg px-4 py-3 text-center min-w-[100px]">Hindsight<br/>Retain</div>
+      </div>
+      <h3 class="text-2xl font-bold text-center mb-8">Microsoft Technology Stack</h3>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-5 text-center hover:border-blue-500/50 transition">
+          <div class="text-3xl mb-2">☁️</div>
+          <div class="font-semibold">Azure</div>
+          <div class="text-xs text-slate-500 mt-1">Infrastructure</div>
+        </div>
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-5 text-center hover:border-blue-500/50 transition">
+          <div class="text-3xl mb-2">🧠</div>
+          <div class="font-semibold">Azure OpenAI</div>
+          <div class="text-xs text-slate-500 mt-1">LLM Reasoning</div>
+        </div>
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-5 text-center hover:border-blue-500/50 transition">
+          <div class="text-3xl mb-2">🔍</div>
+          <div class="font-semibold">Azure AI Search</div>
+          <div class="text-xs text-slate-500 mt-1">Hybrid Retrieval</div>
+        </div>
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-5 text-center hover:border-blue-500/50 transition">
+          <div class="text-3xl mb-2">📊</div>
+          <div class="font-semibold">Azure Monitor</div>
+          <div class="text-xs text-slate-500 mt-1">Telemetry & Alerts</div>
+        </div>
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-5 text-center hover:border-blue-500/50 transition">
+          <div class="text-3xl mb-2">💬</div>
+          <div class="font-semibold">Microsoft Teams</div>
+          <div class="text-xs text-slate-500 mt-1">Collaboration</div>
+        </div>
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-5 text-center hover:border-blue-500/50 transition">
+          <div class="text-3xl mb-2">🤖</div>
+          <div class="font-semibold">Agent Framework</div>
+          <div class="text-xs text-slate-500 mt-1">+ Hindsight Provider</div>
+        </div>
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-5 text-center hover:border-blue-500/50 transition">
+          <div class="text-3xl mb-2">🧬</div>
+          <div class="font-semibold">Hindsight</div>
+          <div class="text-xs text-slate-500 mt-1">Agent Memory</div>
+        </div>
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-5 text-center hover:border-blue-500/50 transition">
+          <div class="text-3xl mb-2">📈</div>
+          <div class="font-semibold">Microsoft Fabric</div>
+          <div class="text-xs text-slate-500 mt-1">Data Analysis</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="impact" class="py-20 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold mb-3">Expected Impact</h2>
+        <p class="text-slate-400 text-lg">Measurable outcomes for SRE and DevOps teams.</p>
+      </div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-6 text-center">
+          <div class="text-3xl font-extrabold gradient-text mb-2">↓ MTTR</div>
+          <p class="text-slate-400 text-sm">Reduce Mean Time to Resolution on recurring incident classes</p>
+        </div>
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-6 text-center">
+          <div class="text-3xl font-extrabold gradient-text mb-2">Consistency</div>
+          <p class="text-slate-400 text-sm">Standardized, evidence-backed response every time</p>
+        </div>
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-6 text-center">
+          <div class="text-3xl font-extrabold gradient-text mb-2">Knowledge</div>
+          <p class="text-slate-400 text-sm">Preserve institutional memory when experts are unavailable</p>
+        </div>
+        <div class="bg-dark-800 border border-dark-600 rounded-xl p-6 text-center">
+          <div class="text-3xl font-extrabold gradient-text mb-2">Onboarding</div>
+          <p class="text-slate-400 text-sm">New engineers get expert-level guidance from day one</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-20 px-6 bg-dark-900">
+    <div class="max-w-3xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-400 text-sm font-semibold mb-6">
+        One-line Pitch
+      </div>
+      <h2 class="text-2xl md:text-3xl font-bold leading-snug mb-6">
+        “An AI that doesn't just troubleshoot — it remembers how <em>your</em> organization solved problems before, explains the evidence, waits for approval, then learns from every resolution.”
+      </h2>
+      <p class="text-slate-400 mb-8">Built with Hindsight (vectorize-io) + Microsoft Azure OpenAI + Agent Framework</p>
+      <div class="flex flex-wrap justify-center gap-4">
+        <a href="https://dev.to/chaitra_beechu_7f0aaafc1f/hindsight-incident-copilot-474d" target="_blank" rel="noopener" class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition">
+          Project Docs
+        </a>
+        <a href="https://github.com/vectorize-io/hindsight" target="_blank" rel="noopener" class="px-6 py-3 bg-dark-800 hover:bg-dark-700 border border-dark-600 text-white font-semibold rounded-lg transition">
+          GitHub · vectorize-io/hindsight
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="border-t border-dark-600 py-10 px-6 text-center text-slate-500 text-sm">
+    <p>SentinelX · Powered by <a href="https://hindsight.vectorize.io/" class="text-blue-400 hover:underline" target="_blank" rel="noopener">Hindsight</a> & Azure</p>
+    <p class="mt-2 text-xs">Front-end demonstration. Connect a real Hindsight server + Azure OpenAI for production use.</p>
+  </footer>
+
+  <script>
+    let memoryOn = true;
+    let currentScenario = 'payment';
+    let phase = 'idle';
+
+    const SCENARIOS = {
+      payment: {
+        id: 'INC-4021',
+        title: 'PaymentService returning 502s after deploy',
+        severity: 'CRITICAL',
+        service: 'PaymentService',
+        started: '14:32',
+        duration: '17 min',
+        errorRate: 18.2,
+        latency: '2.8s',
+        users: '~18,400',
+        blast: [
+          { name: 'Payment API', status: 'red' },
+          { name: 'Checkout', status: 'red' },
+          { name: 'Order Service', status: 'yellow' },
+          { name: 'User Login', status: 'green' },
+        ],
+        withMemory: {
+          confidence: 94,
+          confidenceLabel: 'HIGH',
+          rootCause: 'Missing REDIS_HOST environment variable after blue-green deploy',
+          evidence: [
+            { title: 'INC-2847 Post-Mortem', meta: 'Mar 12, 2025 · PaymentService · 47m MTTR', similarity: 94, snippet: 'Root cause: Missing REDIS_HOST after blue-green deploy. Resolution: restore env var + restart pods.' },
+            { title: 'Runbook: PaymentService 5xx', meta: 'Last updated Jun 2025', similarity: 88, snippet: 'Standard steps for 502/503 including cache and Redis connectivity checks.' },
+            { title: 'INC-3102 Ticket', meta: 'Jun 3, 2025 · Connection pool', similarity: 76, snippet: 'High latency + 502s from exhausted connection pool under load.' },
+          ],
+          signals: ['502 errors', 'Recent deployment', 'PaymentService', 'Redis dependency', 'Config change'],
+          actions: [
+            'Pause current rollout',
+            'Compare env vars in deployment slot vs last healthy release (v2.2.8)',
+            'Restore REDIS_HOST',
+            'Validate Redis connectivity',
+            'Restart affected pods',
+            'Monitor error rate to <1%',
+          ],
+          risk: 'LOW',
+          impact: 'Restart 4 production pods',
+        },
+        withoutMemory: {
+          confidence: 42,
+          confidenceLabel: 'LOW',
+          rootCause: 'Possible causes: upstream dependency failure, config drift, resource exhaustion, or bad deploy artifact.',
+          evidence: [],
+          signals: ['502 errors', 'Recent deployment'],
+          actions: [
+            'Check Application Insights exception stack',
+            'Review recent commits and config diffs',
+            'Scale pods and observe',
+            'Escalate to senior on-call if unresolved in 15 min',
+          ],
+          risk: 'MEDIUM',
+          impact: 'Broad investigation required — no historical match',
+        },
+      },
+      database: {
+        id: 'INC-4022',
+        title: 'High database latency on Orders service',
+        severity: 'HIGH',
+        service: 'OrdersService',
+        started: '11:08',
+        duration: '12 min',
+        errorRate: 9.4,
+        latency: '4.1s',
+        users: '~6,200',
+        blast: [
+          { name: 'Orders API', status: 'red' },
+          { name: 'Checkout', status: 'yellow' },
+          { name: 'Reporting', status: 'yellow' },
+          { name: 'User Login', status: 'green' },
+        ],
+        withMemory: {
+          confidence: 91,
+          confidenceLabel: 'HIGH',
+          rootCause: 'Missing index on Orders table after schema migration (customer_id, created_at)',
+          evidence: [
+            { title: 'INC-1991 Post-Mortem', meta: 'Jan 2025 · Orders DB · 32 min MTTR', similarity: 91, snippet: 'Missing index after migration. Added IX_Orders_CustomerCreated. Latency dropped 80%.' },
+            { title: 'Runbook: High DB Latency', meta: 'SRE Team · v3.2', similarity: 85, snippet: 'Diagnostic queries + mitigation for Azure SQL / Cosmos latency spikes.' },
+          ],
+          signals: ['DB latency spike', 'Orders table', 'Recent schema change', 'Long-running queries'],
+          actions: [
+            'Check Query Performance Insight for top queries',
+            'Confirm recent schema migrations (last 24h)',
+            'Temporary: scale read replicas',
+            'Permanent: add covering index IX_Orders_CustomerCreated',
+          ],
+          risk: 'LOW',
+          impact: 'Index creation — brief write lock possible',
+        },
+        withoutMemory: {
+          confidence: 38,
+          confidenceLabel: 'LOW',
+          rootCause: 'Possible causes: missing index, lock contention, noisy neighbor, or storage throttle.',
+          evidence: [],
+          signals: ['DB latency spike', 'Orders service'],
+          actions: [
+            'Inspect top queries and wait stats',
+            'Check DTU / vCore utilization',
+            'Review recent migrations',
+            'Escalate to DBA if unresolved',
+          ],
+          risk: 'MEDIUM',
+          impact: 'Open-ended investigation',
+        },
+      },
+      deploy: {
+        id: 'INC-4023',
+        title: 'Canary deployment failing health checks',
+        severity: 'HIGH',
+        service: 'Platform / PaymentService',
+        started: '09:45',
+        duration: '9 min',
+        errorRate: 5.1,
+        latency: '1.9s',
+        users: '~2,100 (canary)',
+        blast: [
+          { name: 'Canary pods', status: 'red' },
+          { name: 'Stable pods', status: 'green' },
+          { name: 'Config-sync', status: 'yellow' },
+          { name: 'Ingress', status: 'green' },
+        ],
+        withMemory: {
+          confidence: 96,
+          confidenceLabel: 'HIGH',
+          rootCause: 'Race in ConfigMap update during canary — readinessProbe initialDelaySeconds too low',
+          evidence: [
+            { title: 'INC-2650 Post-Mortem', meta: 'Feb 18, 2025 · Canary deploy · 22m', similarity: 96, snippet: 'Race in config-sync. Fix: increased readinessProbe initialDelaySeconds to 15.' },
+            { title: 'Runbook: Canary Rollback', meta: 'Platform Team', similarity: 82, snippet: 'Standard canary pause / inspect / rollback procedure.' },
+          ],
+          signals: ['Canary fail', 'Health check', 'Config-sync', 'Same pipeline'],
+          actions: [
+            'Pause current canary rollout',
+            'Diff ConfigMap between canary and stable',
+            'Apply known fix: readinessProbe initialDelaySeconds = 15',
+            'Resume with smaller canary percentage',
+          ],
+          risk: 'LOW',
+          impact: 'Canary only — stable traffic unaffected',
+        },
+        withoutMemory: {
+          confidence: 45,
+          confidenceLabel: 'MEDIUM',
+          rootCause: 'Canary health failure — possible config, probe, or dependency issue.',
+          evidence: [],
+          signals: ['Canary fail', 'Health check'],
+          actions: [
+            'Pause canary',
+            'Inspect pod logs and probe failures',
+            'Compare image and config with stable',
+            'Rollback if not resolved in 10 min',
+          ],
+          risk: 'MEDIUM',
+          impact: 'Canary investigation',
+        },
+      },
+    };
+
+    const journeyEl = document.getElementById('journey-content');
+    const evidenceEl = document.getElementById('evidence-list');
+    const blastEl = document.getElementById('blast-panel');
+    const memoryLabel = document.getElementById('memory-label');
+    const toggleBtn = document.getElementById('memory-toggle');
+    const toggleKnob = document.getElementById('toggle-knob');
+
+    function statusColor(s) {
+      if (s === 'red') return 'bg-red-500';
+      if (s === 'yellow') return 'bg-amber-400';
+      return 'bg-emerald-500';
+    }
+
+    function setPipeline(activeSteps, doneSteps) {
+      document.querySelectorAll('.agent-step').forEach(el => {
+        el.classList.remove('active', 'done');
+        const step = el.dataset.step;
+        if (doneSteps.includes(step)) el.classList.add('done');
+        else if (activeSteps.includes(step)) el.classList.add('active');
+      });
+    }
+
+    function renderEvidence(items) {
+      if (!items || !items.length) {
+        evidenceEl.innerHTML = memoryOn
+          ? '<p class="text-slate-500 text-sm">No strong historical matches. Escalation recommended.</p>'
+          : '<p class="text-slate-500 text-sm">Memory is OFF — no organizational evidence retrieved.</p>';
+        return;
+      }
+      evidenceEl.innerHTML = items.map(e =>
+        '<div class="bg-dark-800 border border-dark-600 rounded-lg p-3 mb-2.5 text-sm">' +
+          '<div class="font-semibold text-blue-400 mb-0.5">' + e.title + '</div>' +
+          '<div class="text-xs text-slate-500">' + e.meta + '</div>' +
+          '<p class="mt-1.5 text-slate-400 text-xs leading-relaxed">' + e.snippet + '</p>' +
+          '<div class="h-1 bg-dark-600 rounded-full mt-2 overflow-hidden">' +
+            '<div class="h-full bg-emerald-500 rounded-full sim-bar" style="width:' + e.similarity + '%"></div>' +
+          '</div>' +
+          '<div class="text-xs text-slate-500 mt-1">' + e.similarity + '% similarity</div>' +
+        '</div>'
+      ).join('');
+    }
+
+    function renderBlast(sc) {
+      blastEl.innerHTML =
+        '<div class="flex justify-between text-xs mb-2"><span class="text-slate-400">' + sc.id + '</span><span class="font-semibold text-red-400">' + sc.severity + '</span></div>' +
+        '<div class="text-sm font-medium mb-2">' + sc.service + '</div>' +
+        '<div class="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-slate-400 mb-3">' +
+          '<span>Started ' + sc.started + '</span><span>Duration ' + sc.duration + '</span>' +
+          '<span>Users ' + sc.users + '</span><span>Latency ' + sc.latency + '</span>' +
+        '</div>' +
+        '<div class="text-xs text-slate-500 mb-1.5">Services</div>' +
+        sc.blast.map(b =>
+          '<div class="flex items-center gap-2 text-xs mb-1"><span class="w-2 h-2 rounded-full ' + statusColor(b.status) + '"></span>' + b.name + '</div>'
+        ).join('') +
+        '<div class="mt-3"><div class="flex justify-between text-xs mb-1"><span class="text-slate-500">Error rate</span><span id="error-rate-label">' + sc.errorRate + '%</span></div>' +
+        '<div class="h-1.5 bg-dark-600 rounded-full overflow-hidden"><div id="error-bar" class="h-full bg-red-500 rounded-full error-bar" style="width:' + Math.min(sc.errorRate * 4, 100) + '%"></div></div></div>';
+    }
+
+    function confBadge(label, pct) {
+      const colors = { HIGH: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30', MEDIUM: 'bg-amber-500/15 text-amber-400 border-amber-500/30', LOW: 'bg-red-500/15 text-red-400 border-red-500/30' };
+      return '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-semibold ' + (colors[label] || colors.LOW) + '">' + label + ' · ' + pct + '%</span>';
+    }
+
+    function showIdle() {
+      phase = 'idle';
+      setPipeline([], []);
+      journeyEl.innerHTML =
+        '<div class="text-center py-10">' +
+          '<div class="text-4xl mb-4">🚨</div>' +
+          '<h3 class="text-lg font-semibold mb-2">Select an incident scenario</h3>' +
+          '<p class="text-sm text-slate-400 max-w-md mx-auto">The agent will triage, recall organizational memory (if ON), diagnose with confidence, request approval, remediate, and retain the outcome.</p>' +
+          '<button id="start-btn" class="mt-6 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg text-sm transition">Start investigation →</button>' +
+        '</div>';
+      document.getElementById('start-btn').onclick = startInvestigation;
+      renderEvidence([]);
+      renderBlast(SCENARIOS[currentScenario]);
+    }
+
+    function startInvestigation() {
+      phase = 'investigating';
+      const sc = SCENARIOS[currentScenario];
+      const data = memoryOn ? sc.withMemory : sc.withoutMemory;
+      setPipeline(['triage'], []);
+      journeyEl.innerHTML = '<div class="text-sm text-slate-400 animate-pulse">Running triage agent…</div>';
+
+      setTimeout(function() {
+        setPipeline(['recall'], ['triage']);
+        journeyEl.innerHTML = '<div class="text-sm text-slate-400 animate-pulse">' + (memoryOn ? 'Recalling from Hindsight memory bank…' : 'Memory OFF — generating generic response…') + '</div>';
+      }, 700);
+
+      setTimeout(function() {
+        setPipeline(['rca'], ['triage', 'recall']);
+        journeyEl.innerHTML = '<div class="text-sm text-slate-400 animate-pulse">Root-cause agent reasoning…</div>';
+      }, 1400);
+
+      setTimeout(function() {
+        setPipeline([], ['triage', 'recall', 'rca']);
+        renderEvidence(data.evidence);
+        showDiagnosis(sc, data);
+      }, 2200);
+    }
+
+    function showDiagnosis(sc, data) {
+      phase = 'approval';
+      var whyBlock = memoryOn && data.evidence.length ? (
+        '<div class="bg-dark-950 border border-dark-600 rounded-lg p-4 mt-4 text-sm">' +
+          '<div class="font-semibold text-slate-300 mb-2">Why this recommendation?</div>' +
+          '<div class="text-xs text-slate-500 mb-2">Matched historical incidents</div>' +
+          data.evidence.map(function(e) { return '<div class="text-xs text-slate-400 mb-1">• ' + e.title + ' — <span class="text-emerald-400">' + e.similarity + '%</span></div>'; }).join('') +
+          '<div class="text-xs text-slate-500 mt-3 mb-1">Common signals</div>' +
+          '<div class="flex flex-wrap gap-1.5">' + data.signals.map(function(s) { return '<span class="px-2 py-0.5 rounded bg-dark-700 text-xs text-slate-300">' + s + '</span>'; }).join('') + '</div>' +
+          (data.evidence[0] ? '<p class="mt-3 text-xs text-slate-400 leading-relaxed"><strong class="text-slate-300">Historical resolution:</strong> ' + data.evidence[0].snippet + '</p>' : '') +
+        '</div>'
+      ) : (
+        '<div class="bg-dark-950 border border-amber-500/30 rounded-lg p-4 mt-4 text-sm text-amber-200/90">' +
+          (memoryOn
+            ? 'No strong historical match. Recommendation is generic — escalate if symptoms persist.'
+            : 'Memory is OFF. This is a generic LLM-style answer with no organizational evidence.') +
+        '</div>'
+      );
+
+      journeyEl.innerHTML =
+        '<div class="flex items-start justify-between gap-3 mb-3">' +
+          '<div><div class="text-xs text-slate-500">' + sc.id + ' · ' + sc.service + '</div><h3 class="font-semibold text-lg">' + sc.title + '</h3></div>' +
+          confBadge(data.confidenceLabel, data.confidence) +
+        '</div>' +
+        '<div class="bg-dark-700 border border-dark-600 rounded-lg p-4 text-sm">' +
+          '<div class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Root cause hypothesis</div>' +
+          '<p class="text-slate-200">' + data.rootCause + '</p>' +
+        '</div>' +
+        '<div class="mt-4">' +
+          '<div class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Recommended action plan</div>' +
+          '<ol class="list-decimal list-inside space-y-1 text-sm text-slate-300">' + data.actions.map(function(a) { return '<li>' + a + '</li>'; }).join('') + '</ol>' +
+        '</div>' +
+        whyBlock +
+        '<div class="mt-5 bg-amber-500/10 border border-amber-500/40 rounded-lg p-4">' +
+          '<div class="flex items-center gap-2 text-amber-300 font-semibold text-sm mb-1">⚠️ Action requires approval</div>' +
+          '<div class="text-xs text-slate-400 space-y-0.5">' +
+            '<div>Potential impact: <span class="text-slate-300">' + data.risk + '</span></div>' +
+            '<div>Proposed: <span class="text-slate-300">' + data.impact + '</span></div>' +
+            '<div>Evidence confidence: <span class="text-slate-300">' + data.confidence + '%</span></div>' +
+          '</div>' +
+          '<div class="flex gap-3 mt-4">' +
+            '<button id="approve-btn" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg transition">Approve fix</button>' +
+            '<button id="reject-btn" class="px-5 py-2 bg-dark-700 hover:bg-dark-600 border border-dark-600 text-slate-300 text-sm font-semibold rounded-lg transition">Reject</button>' +
+          '</div>' +
+        '</div>';
+
+      document.getElementById('approve-btn').onclick = function() { runRemediation(sc, data); };
+      document.getElementById('reject-btn').onclick = function() {
+        journeyEl.innerHTML = '<div class="text-center py-8"><p class="text-slate-400 mb-4">Action rejected. Investigation remains open.</p><button id="restart-btn" class="px-5 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg">Start over</button></div>';
+        document.getElementById('restart-btn').onclick = showIdle;
+        setPipeline([], ['triage', 'recall', 'rca']);
+      };
+    }
+
+    function runRemediation(sc, data) {
+      phase = 'remediating';
+      setPipeline(['remediate'], ['triage', 'recall', 'rca']);
+      journeyEl.innerHTML =
+        '<div class="text-center py-6">' +
+          '<div class="text-sm font-semibold text-blue-400 mb-4">Executing approved remediation…</div>' +
+          '<div class="space-y-2 text-left max-w-sm mx-auto text-sm" id="rem-steps"></div>' +
+          '<div class="mt-6 max-w-xs mx-auto">' +
+            '<div class="flex justify-between text-xs mb-1"><span class="text-slate-500">Error rate</span><span id="live-err">' + sc.errorRate + '%</span></div>' +
+            '<div class="h-2 bg-dark-600 rounded-full overflow-hidden"><div id="live-bar" class="h-full bg-red-500 rounded-full error-bar" style="width:' + Math.min(sc.errorRate * 4, 100) + '%"></div></div>' +
+          '</div>' +
+        '</div>';
+
+      var steps = memoryOn
+        ? ['Configuration updated', 'Pods restarted', 'Health checks passed', 'Error rate falling']
+        : ['Broad checks running', 'Telemetry reviewed', 'Manual steps applied', 'Monitoring…'];
+      var remEl = document.getElementById('rem-steps');
+      var i = 0;
+      var rates = [sc.errorRate, sc.errorRate * 0.55, sc.errorRate * 0.2, 0.3];
+
+      function nextStep() {
+        if (i < steps.length) {
+          remEl.innerHTML += '<div class="flex items-center gap-2 text-emerald-400">✓ ' + steps[i] + '</div>';
+          var r = rates[i];
+          document.getElementById('live-err').textContent = r.toFixed(1) + '%';
+          document.getElementById('live-bar').style.width = Math.min(r * 4, 100) + '%';
+          document.getElementById('live-bar').className = 'h-full rounded-full error-bar ' + (r < 1 ? 'bg-emerald-500' : 'bg-red-500');
+          var errLabel = document.getElementById('error-rate-label');
+          var errBar = document.getElementById('error-bar');
+          if (errLabel) errLabel.textContent = r.toFixed(1) + '%';
+          if (errBar) {
+            errBar.style.width = Math.min(r * 4, 100) + '%';
+            errBar.className = 'h-full rounded-full error-bar ' + (r < 1 ? 'bg-emerald-500' : 'bg-red-500');
+          }
+          i++;
+          setTimeout(nextStep, 900);
+        } else {
+          setPipeline(['verify'], ['triage', 'recall', 'rca', 'remediate']);
+          setTimeout(function() { showResolved(sc, data); }, 600);
+        }
+      }
+      setTimeout(nextStep, 400);
+    }
+
+    function showResolved(sc, data) {
+      phase = 'resolved';
+      setPipeline([], ['triage', 'recall', 'rca', 'remediate', 'verify']);
+      var mttrOld = memoryOn ? 47 : 42;
+      var mttrNew = memoryOn ? 6 : 28;
+      journeyEl.innerHTML =
+        '<div class="text-center py-4">' +
+          '<div class="text-4xl mb-3">✅</div>' +
+          '<h3 class="text-xl font-bold text-emerald-400 mb-1">Incident resolved</h3>' +
+          '<p class="text-sm text-slate-400 mb-6">' + sc.id + ' · ' + sc.service + '</p>' +
+          '<div class="grid grid-cols-2 gap-3 max-w-sm mx-auto text-sm mb-6">' +
+            '<div class="bg-dark-700 rounded-lg p-3"><div class="text-xs text-slate-500">Root cause</div><div class="font-medium mt-0.5">' + (data.rootCause.length > 40 ? data.rootCause.slice(0, 40) + '…' : data.rootCause) + '</div></div>' +
+            '<div class="bg-dark-700 rounded-lg p-3"><div class="text-xs text-slate-500">MTTR</div><div class="font-medium mt-0.5">' + mttrNew + ' min <span class="text-slate-500 text-xs">(hist. ' + mttrOld + 'm)</span></div></div>' +
+            '<div class="bg-dark-700 rounded-lg p-3"><div class="text-xs text-slate-500">Confidence</div><div class="font-medium mt-0.5">' + data.confidence + '%</div></div>' +
+            '<div class="bg-dark-700 rounded-lg p-3"><div class="text-xs text-slate-500">Error rate</div><div class="font-medium mt-0.5 text-emerald-400">0.3%</div></div>' +
+          '</div>' +
+          (memoryOn
+            ? '<button id="retain-btn" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg text-sm transition">+ Save to Organizational Memory</button>'
+            : '<p class="text-xs text-slate-500 mb-4">Memory was OFF — outcome not retained.</p><button id="restart-btn" class="px-5 py-2 bg-dark-700 border border-dark-600 text-sm rounded-lg">Start over</button>') +
+        '</div>';
+      if (memoryOn) {
+        document.getElementById('retain-btn').onclick = function() { runRetain(sc); };
+      } else {
+        document.getElementById('restart-btn').onclick = showIdle;
+      }
+    }
+
+    function runRetain(sc) {
+      phase = 'retained';
+      setPipeline(['retain'], ['triage', 'recall', 'rca', 'remediate', 'verify']);
+      var steps = [
+        'Extracting knowledge…',
+        'Root cause identified',
+        'Resolution pattern extracted',
+        'Runbook updated',
+        'Hindsight memory updated ✓',
+      ];
+      journeyEl.innerHTML =
+        '<div class="text-center py-6">' +
+          '<div class="text-sm font-semibold text-blue-400 mb-4">Continuous learning</div>' +
+          '<div class="space-y-2 text-left max-w-xs mx-auto text-sm" id="retain-steps"></div>' +
+        '</div>';
+      var el = document.getElementById('retain-steps');
+      var i = 0;
+      function next() {
+        if (i < steps.length) {
+          el.innerHTML += '<div class="flex items-center gap-2 ' + (i === steps.length - 1 ? 'text-emerald-400 font-medium' : 'text-slate-300') + '">' + (i === steps.length - 1 ? '✓ ' : '→ ') + steps[i] + '</div>';
+          i++;
+          setTimeout(next, 700);
+        } else {
+          var n = document.getElementById('stat-incidents');
+          var cur = parseInt(n.textContent.replace(/,/g, ''), 10);
+          n.textContent = (cur + 1).toLocaleString();
+          setTimeout(function() {
+            setPipeline([], ['triage', 'recall', 'rca', 'remediate', 'verify', 'retain']);
+            journeyEl.innerHTML =
+              '<div class="text-center py-6">' +
+                '<div class="text-3xl mb-3">🧠</div>' +
+                '<h3 class="font-bold text-lg mb-2">Organizational memory updated</h3>' +
+                '<p class="text-sm text-slate-400 max-w-md mx-auto mb-2">This incident can now help future engineers resolve similar failures faster.</p>' +
+                '<p class="text-xs text-emerald-400/90 mb-6">Next similar alert will retrieve ' + sc.id + ' as evidence.</p>' +
+                '<button id="restart-btn" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-lg">Run another scenario</button>' +
+              '</div>';
+            document.getElementById('restart-btn').onclick = showIdle;
+          }, 800);
+        }
+      }
+      next();
+    }
+
+    toggleBtn.onclick = function () {
+      memoryOn = !memoryOn;
+      toggleBtn.setAttribute('aria-pressed', memoryOn);
+      if (memoryOn) {
+        toggleBtn.classList.remove('bg-dark-600');
+        toggleBtn.classList.add('bg-emerald-600');
+        toggleKnob.classList.add('translate-x-6');
+        toggleKnob.classList.remove('translate-x-1');
+        memoryLabel.textContent = 'ON — Organizational memory active';
+        memoryLabel.className = 'text-sm font-semibold text-emerald-400';
+      } else {
+        toggleBtn.classList.remove('bg-emerald-600');
+        toggleBtn.classList.add('bg-dark-600');
+        toggleKnob.classList.remove('translate-x-6');
+        toggleKnob.classList.add('translate-x-1');
+        memoryLabel.textContent = 'OFF — Generic answers only (no memory)';
+        memoryLabel.className = 'text-sm font-semibold text-slate-400';
+      }
+      if (phase === 'idle' || phase === 'resolved' || phase === 'retained') showIdle();
+    };
+
+    document.querySelectorAll('.scenario-btn').forEach(function(btn) {
+      btn.onclick = function () {
+        currentScenario = btn.dataset.scenario;
+        document.querySelectorAll('.scenario-btn').forEach(function(b) {
+          b.className = 'scenario-btn text-xs px-3 py-1.5 rounded-md bg-dark-700 border border-dark-600 text-slate-400 hover:border-blue-500 hover:text-white';
+        });
+        btn.className = 'scenario-btn text-xs px-3 py-1.5 rounded-md bg-blue-600 text-white font-medium';
+        showIdle();
+      };
+    });
+
+    showIdle();
+  </script>
+</body>
+</html>
